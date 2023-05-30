@@ -1,57 +1,74 @@
 package com.alexyach.calculatortest.ui
 
-import android.media.VolumeShaper
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.alexyach.calculatortest.model.CalculationModel
+import com.alexyach.calculatortest.model.ErrorMessage
 import com.alexyach.calculatortest.model.Operation
 
 const val TAG = "myLogs"
 
 class CalculatorViewModel : ViewModel() {
 
-    //    private val _calcModel: MutableLiveData<CalculationModel> = MutableLiveData(CalculationModel())
-//    val calcModel: LiveData<CalculationModel> = _calcModel
     var calculationModel = CalculationModel()
 
-    private val _stringForDisplay = MutableLiveData<String>("")
+    private val _stringForDisplay = MutableLiveData("")
     val stringForDisplay: LiveData<String> = _stringForDisplay
 
+    private val _stringForStory = MutableLiveData("")
+    val stringForStory: LiveData<String> = _stringForStory
+
+    private var newCalculation = false
+    val errorMessage = MutableLiveData<ErrorMessage>()
+
     fun writeVariable(variable: String) {
-        if (validateFirstNull(variable)) return
+
+        newCalculation()
+        validateFirstNull()
 
         if (calculationModel.operation == null) {
             calculationModel.variable1 += variable
 
-                _stringForDisplay.value += variable
-
-            Log.d(TAG, "writeVariable var1: ${calculationModel.variable1}")
-
+            _stringForDisplay.value += variable
+            _stringForStory.value += variable
         } else {
             calculationModel.variable2 += variable
             _stringForDisplay.value += variable
-
-            Log.d(TAG, "writeVariable var2: ${calculationModel.variable2}")
+            _stringForStory.value += variable
         }
 
     }
 
-    fun writeOperation(operation: Operation) {
+    fun setOperation(operation: Operation) {
+
+        if (calculationModel.variable1 == "") {
+            errorMessage.value = ErrorMessage.VARIABLE1_IS_EMPTY
+            return
+        }
+
         if (calculationModel.operation == null) {
             calculationModel.operation = operation
             _stringForDisplay.value = ""
 
-//            Log.d(TAG, "writeOperation operation: ${calculationModel.operation}")
+            when (operation) {
+                Operation.Plus -> _stringForStory.value += " + "
+                Operation.Minus -> _stringForStory.value += " - "
+                Operation.Division -> _stringForStory.value += " / "
+                Operation.Multiply -> _stringForStory.value += " * "
+            }
+
         } else {
-            Log.d(TAG, "Операция уже назначена")
+            errorMessage.value = ErrorMessage.IS_OPERAND
         }
     }
 
     fun decimalPoint() {
+        newCalculation()
         if (!validateDecimalPoint()) {
             _stringForDisplay.value += "."
+            _stringForStory.value += "."
 
             if (calculationModel.operation == null) {
                 calculationModel.variable1 += "."
@@ -60,33 +77,51 @@ class CalculatorViewModel : ViewModel() {
             }
 
         } else {
+            errorMessage.value = ErrorMessage.IS_DECIMAL_POINTS
             Log.d(TAG, "Точка уже ЕСТЬ!")
         }
     }
 
     fun equals() {
-        if (validateEmptyFields()) return
+        if (validateEmptyFields()) {
+            errorMessage.value = ErrorMessage.EMPTY_FIELDS
+            return
+        }
 
         val numeric1: Float = calculationModel.variable1.toFloat()
         val numeric2: Float = calculationModel.variable2.toFloat()
 
-        Log.d(TAG, "ToFloat v1= $numeric1")
-
         when (calculationModel.operation) {
-            Operation.Plus -> _stringForDisplay.value = (numeric1 + numeric2).toString()
-            Operation.Minus -> _stringForDisplay.value = (numeric1 - numeric2).toString()
+            Operation.Plus -> {
+                _stringForDisplay.value = (numeric1 + numeric2).toString()
+                _stringForStory.value += "=  ${(numeric1 + numeric2)}"
+            }
+
+            Operation.Minus -> {
+                _stringForDisplay.value = (numeric1 - numeric2).toString()
+                _stringForStory.value += "= ${(numeric1 - numeric2)}"
+            }
+
             Operation.Division -> {
                 if (numeric2 != 0F) {
                     _stringForDisplay.value = (numeric1 / numeric2).toString()
+                    _stringForStory.value += "= ${(numeric1 / numeric2)}"
                 } else {
                     _stringForDisplay.value = "Деление на ноль"
-                    Log.d(TAG, "Деление на ноль")
+                    _stringForStory.value += "Деление на ноль"
+                    errorMessage.value = ErrorMessage.DIVISION_FOR_NULL
                 }
             }
 
-            Operation.Multiply -> _stringForDisplay.value = (numeric1 * numeric2).toString()
+            Operation.Multiply -> {
+                _stringForDisplay.value = (numeric1 * numeric2).toString()
+                _stringForStory.value += "= ${(numeric1 * numeric2)}"
+            }
+
             else -> {}
         }
+
+        newCalculation = true
 
         // Обнулили
         calculationModel = CalculationModel()
@@ -97,12 +132,33 @@ class CalculatorViewModel : ViewModel() {
         _stringForDisplay.value = ""
     }
 
-    private fun validateFirstNull(num: String): Boolean {
-        return (_stringForDisplay.value == "" && num == "0")
+    fun clearAll() {
+        calculationModel = CalculationModel()
+        _stringForDisplay.value = ""
+        _stringForStory.value = ""
     }
 
     private fun validateDecimalPoint(): Boolean {
         return _stringForDisplay.value!!.contains(".")
+    }
+
+    /** Убираем первые нули в переменных */
+    private fun validateFirstNull() {
+
+        while (_stringForDisplay.value!!.isNotEmpty()
+            && _stringForDisplay.value!!.first() == '0'
+        ) {
+            _stringForDisplay.value =
+                _stringForDisplay.value!!.substring(1)
+        }
+    }
+
+    private fun newCalculation(){
+        if(newCalculation){
+            _stringForDisplay.value = ""
+            _stringForStory.value += "\n"
+            newCalculation = false
+        }
     }
 
     private fun validateEmptyFields(): Boolean {

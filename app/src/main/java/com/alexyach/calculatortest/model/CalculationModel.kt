@@ -14,4 +14,12 @@ enum class Operation{
     Multiply
 }
 
+enum class ErrorMessage{
+    IS_OPERAND,
+    EMPTY_FIELDS,
+    IS_DECIMAL_POINTS,
+    DIVISION_FOR_NULL,
+    VARIABLE1_IS_EMPTY
+}
+
 

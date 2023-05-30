@@ -19,4 +19,11 @@
     <string name="btn_minus">-</string>
     <string name="btn_equals">=</string>
     <string name="btn_clear">clear</string>
+
+<!--    ErrorMessage-->
+    <string name="is_operand">математическая операция уже назначена</string>
+    <string name="empty_fields">Не все поля заполнены. Нажмите clear и начните сначала</string>
+    <string name="is_decimal_point">Десятичная точка уже есть</string>
+    <string name="division_for_null">деление на ноль</string>
+    <string name="variable1_is_empty">Не определена первая переменная</string>
 </resources>

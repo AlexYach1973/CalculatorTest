@@ -2,26 +2,20 @@ package com.alexyach.calculatortest.ui
 
 import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+import android.widget.Toast
 import com.alexyach.calculatortest.R
 import com.alexyach.calculatortest.databinding.FragmentCalculatorBinding
+import com.alexyach.calculatortest.model.ErrorMessage
 import com.alexyach.calculatortest.model.Operation
 
 class CalculatorFragment : Fragment() {
 
     private var _binding: FragmentCalculatorBinding? = null
     private val binding: FragmentCalculatorBinding get() = _binding!!
-
-    private val buttonsNumId = intArrayOf(R.id.btn_0, R.id.btn_1,
-        R.id.btn_2, R.id.btn_3, R.id.btn_4, R.id.btn_5, R.id.btn_6,
-        R.id.btn_7, R.id.btn_8, R.id.btn_9)
-
-
 
     private val viewModel: CalculatorViewModel by lazy {
         ViewModelProvider(this)[CalculatorViewModel::class.java]
@@ -45,15 +39,23 @@ class CalculatorFragment : Fragment() {
 
     private fun observeData() {
 
-        viewModel.stringForDisplay.observe(viewLifecycleOwner){
+        viewModel.stringForDisplay.observe(viewLifecycleOwner) {
             binding.textViewDisplay.text = it
+        }
+
+        viewModel.stringForStory.observe(viewLifecycleOwner) {
+            binding.textViewStory.text = it
+        }
+
+        viewModel.errorMessage.observe(viewLifecycleOwner) {
+            showToastError(it)
         }
 
     }
 
-    private fun setClickButton(){
+    private fun setClickButton() {
 
-        with(binding){
+        with(binding) {
 
             /** Numbers */
             btn0.setOnClickListener {
@@ -89,16 +91,16 @@ class CalculatorFragment : Fragment() {
 
             /** Operation */
             btnPlus.setOnClickListener {
-                viewModel.writeOperation(Operation.Plus)
+                viewModel.setOperation(Operation.Plus)
             }
             btnMinus.setOnClickListener {
-                viewModel.writeOperation(Operation.Minus)
+                viewModel.setOperation(Operation.Minus)
             }
             btnDiv.setOnClickListener {
-                viewModel.writeOperation(Operation.Division)
+                viewModel.setOperation(Operation.Division)
             }
             btnMult.setOnClickListener {
-                viewModel.writeOperation(Operation.Multiply)
+                viewModel.setOperation(Operation.Multiply)
             }
 
             /** decimalPoint */
@@ -111,12 +113,45 @@ class CalculatorFragment : Fragment() {
                 viewModel.equals()
             }
 
-            /** Clear */
+            /** Clear all fields */
             btnClear.setOnClickListener {
                 viewModel.clear()
             }
 
+            // Долгое нажатие - очистить вместе с историей
+            btnClear.setOnLongClickListener {
+                viewModel.clearAll()
+                true
+            }
+
         }
+    }
+
+    private fun showToastError(message: ErrorMessage) {
+        when (message) {
+            ErrorMessage.DIVISION_FOR_NULL -> {
+                showToast(resources.getString(R.string.division_for_null))
+            }
+
+            ErrorMessage.EMPTY_FIELDS -> {
+                showToast(resources.getString(R.string.empty_fields))
+            }
+
+            ErrorMessage.IS_OPERAND -> {
+                showToast(resources.getString(R.string.is_operand))
+            }
+
+            ErrorMessage.IS_DECIMAL_POINTS -> {
+                showToast(resources.getString(R.string.is_decimal_point))
+            }
+
+            ErrorMessage.VARIABLE1_IS_EMPTY ->
+                showToast(resources.getString(R.string.variable1_is_empty))
+        }
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroy() {
