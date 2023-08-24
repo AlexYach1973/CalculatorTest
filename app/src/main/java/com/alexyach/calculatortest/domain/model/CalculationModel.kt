@@ -1,10 +1,12 @@
-package com.alexyach.calculatortest.model
+package com.alexyach.calculatortest.domain.model
+
+const val EMPTY_FIELD = ""
 
 data class CalculationModel(
-    var variable1: String = "",
-    var variable2: String = "",
+    var variable1: String = EMPTY_FIELD,
+    var variable2: String = EMPTY_FIELD,
     var operation: Operation? = null,
-    var result: String = "",
+    var result: String = EMPTY_FIELD,
 )
 
 enum class Operation{
