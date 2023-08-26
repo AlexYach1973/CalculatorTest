@@ -1,6 +1,5 @@
 package com.alexyach.calculatortest.domain.usecases
 
-import android.util.Log
 import com.alexyach.calculatortest.domain.Calculator
 import com.alexyach.calculatortest.domain.model.Operation
 
